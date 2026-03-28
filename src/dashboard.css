@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #0A0E17;
+    color: #E2E8F0;
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #0A0E17; }
+  ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+  .glass-panel {
+      background: rgba(17, 24, 39, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+  }
+
+  .glass-nav {
+      background: rgba(10, 14, 23, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .text-gradient {
+      background: linear-gradient(to right, #ffffff, #94a3b8);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+  }
+
+  .text-gradient-cyan {
+      background: linear-gradient(135deg, #00F0FF, #0057FF);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+  }
+
+  /* Fast, cheap glow effect without blur filters */
+  .ambient-glow {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+      z-index: -1;
+      pointer-events: none;
+  }
+
+  /* SVG Animation Styles */
+  .svg-issue-row { transform-origin: left; }
+  .svg-notification { transform: translateX(120%); }
+
+  .modal-overlay {
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(8px);
+  }
+  
+  /* Add some micro-interactions */
+  .category-btn {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .project-card {
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .project-card:hover {
+      transform: translateY(-4px) scale(1.01);
+  }
+}
+
+@layer utilities {
+  @keyframes fade-in-up {
+      0%, 10% { opacity: 0; transform: translateY(10px); }
+      15%, 80% { opacity: 1; transform: translateY(0); }
+      90%, 100% { opacity: 0; transform: translateY(0); }
+  }
+  @keyframes slide-notify {
+      0%, 20% { transform: translateX(120%); }
+      25%, 75% { transform: translateX(0); }
+      80%, 100% { transform: translateX(120%); }
+  }
+  @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+  }
+}
