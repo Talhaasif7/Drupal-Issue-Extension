@@ -1,6 +1,6 @@
-import { storage } from './lib/storage'
+import { storage } from './lib/storage';
 import { fetchRecentProjects, fetchProjectIssues, fetchGlobalIssues, formatStatus, fetchActiveProjectsForAutocomplete } from './lib/drupal-api'
-import type { DrupalIssue } from './lib/drupal-api'
+
 
 import AOS from 'aos';
 import 'aos/dist/aos.css';
@@ -21,7 +21,7 @@ class WebDashboard {
 
     private currentFilter: string = 'All';
     private currentPage: number = 0;
-    private globalIssues: DrupalIssue[] = [];
+    private globalIssues: any[] = [];
 
     constructor() {
         document.addEventListener('DOMContentLoaded', () => this.init());
@@ -357,13 +357,37 @@ class WebDashboard {
         if (!this.grid) return;
 
         try {
-            const newIssues = await fetchGlobalIssues(this.currentPage);
-            if (!itemsHaveChanged(this.globalIssues, newIssues) && !append && this.globalIssues.length > 0) return;
+            // Load stored issues first
+            const storedIssues = await storage.getLatestIssues();
+            // Normalize stored issues to match DrupalIssue shape
+            const normalizedStored = storedIssues.map((i) => ({
+                nid: i.nid,
+                title: i.title,
+                project: i.project_name,
+                status: i.status,
+                priority: i.priority,
+                category: i.category,
+                created: i.created_at ? Math.floor(new Date(i.created_at).getTime() / 1000) : undefined,
+                changed: i.last_changed ? Math.floor(i.last_changed / 1000) : undefined,
+            }));
+            // Fetch fresh issues
+            const fetched = await fetchGlobalIssues(this.currentPage);
+            // Combine and deduplicate by nid, preferring newer changed timestamp
+            const combined = [...normalizedStored, ...fetched];
+            const uniqueMap = new Map<string, any>();
+            combined.forEach((issue) => {
+                if (!uniqueMap.has(issue.nid) || (issue.changed && issue.changed > (uniqueMap.get(issue.nid).changed || 0))) {
+                    uniqueMap.set(issue.nid, issue);
+                }
+            });
+            const mergedIssues = Array.from(uniqueMap.values());
+
+            if (!itemsHaveChanged(this.globalIssues, mergedIssues) && !append && this.globalIssues.length > 0) return;
 
             if (append) {
-                this.globalIssues = [...this.globalIssues, ...newIssues];
+                this.globalIssues = [...this.globalIssues, ...mergedIssues];
             } else {
-                this.globalIssues = newIssues;
+                this.globalIssues = mergedIssues;
             }
 
             this.updateCategoryCounts();

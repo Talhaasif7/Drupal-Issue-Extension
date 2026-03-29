@@ -9,6 +9,8 @@ const Popup = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchIssues = async () => {
+    // Import storage dynamically to avoid circular dependencies in extension context
+    const { storage } = await import('./lib/storage');
     try {
       // Fetch directly from Drupal to guarantee real-time accuracy and bypass empty Supabase caches
       const { fetchGlobalIssues, formatStatus } = await import('./lib/drupal-api');
@@ -17,14 +19,23 @@ const Popup = () => {
       // The user specifically requested to sort by creation time
       const sortedByCreation = data.sort((a: any, b: any) => b.created - a.created);
       
-      setIssues(sortedByCreation.map((i: any) => ({
+      const mappedIssues = sortedByCreation.map((i: any) => ({
           nid: i.nid,
           title: i.title,
           project_name: i.project,
           status: formatStatus(i.status),
-          created_at: i.created * 1000,
-          last_changed: i.changed * 1000
-      })) as any);
+          created_at: (i.created * 1000).toString(),
+          last_changed: i.changed * 1000,
+          priority: i.priority ?? null,
+          category: i.category ?? null
+      }));
+      setIssues(mappedIssues as any);
+      // Persist issues to shared storage for the web dashboard
+      try {
+        await storage.saveIssues(mappedIssues);
+      } catch (e) {
+        console.warn('Failed to persist issues to storage', e);
+      }
     } catch (err) {
       console.error('Failed to fetch issues directly:', err);
     } finally {
@@ -54,11 +65,12 @@ const Popup = () => {
   };
 
   const openDashboard = () => {
-    // Navigate to the live dev server instead of the internal extension copy
+    // Navigate to the live production server on Vercel
+    const dashboardUrl = 'https://issue-sniper.vercel.app/';
     if (typeof chrome !== 'undefined' && chrome.tabs) {
-      chrome.tabs.create({ url: 'http://localhost:5173/' });
+      chrome.tabs.create({ url: dashboardUrl });
     } else {
-      window.open('http://localhost:5173/', '_blank');
+      window.open(dashboardUrl, '_blank');
     }
   };
 
