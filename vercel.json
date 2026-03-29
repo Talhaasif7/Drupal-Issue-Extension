@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/drupal/:path*",
+      "destination": "https://www.drupal.org/:path*"
+    }
+  ]
+}
